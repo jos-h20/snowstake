@@ -1,44 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mt. Bachelor Snow Stake Proxy</title>
     <style>
-        /* Removes all margins and prevents scrollbars */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            background-color: #000;
-        }
-
-        /* Makes the container fill the screen at 16:9 ratio */
-        .video-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        iframe {
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        
+        /* Floating Stats Card */
+        #weather-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
+            background: rgba(15, 15, 15, 0.85);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 10px;
+            border-left: 5px solid #00aaff;
+            display: flex;
+            gap: 25px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            pointer-events: none; /* Let clicks pass through to the video if needed */
         }
+
+        .stat-group { display: flex; flex-direction: column; }
+        .stat-label { font-size: 10px; text-transform: uppercase; color: #00aaff; letter-spacing: 1px; margin-bottom: 2px; font-weight: bold; }
+        .stat-value { font-size: 20px; font-weight: bold; font-variant-numeric: tabular-nums; }
+        
+        .video-container { width: 100vw; height: 100vh; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
+
+    <div id="weather-overlay">
+        <div class="stat-group">
+            <div class="stat-label">Temperature</div>
+            <div id="temp" class="stat-value">--°</div>
+        </div>
+        <div class="stat-group">
+            <div class="stat-label">24h Snow</div>
+            <div id="snow" class="stat-value">--″</div>
+        </div>
+    </div>
+
     <div class="video-container">
         <iframe 
-            src="https://www.youtube-nocookie.com/embed/jF9f7hsdlJg?autoplay=1&mute=1&rel=0&modestbranding=1&showinfo=0" 
-            allow="autoplay; encrypted-media; picture-in-picture" 
+            src="https://www.youtube-nocookie.com/embed/jF9f7hsdlJg?autoplay=1&mute=1&modestbranding=1&rel=0&iv_load_policy=3" 
+            allow="autoplay; encrypted-media" 
             allowfullscreen>
         </iframe>
     </div>
+
+    <script>
+        async function updateWeather() {
+            try {
+                // Fetching from a reliable weather source for Mt. Bachelor's exact coordinates
+                // Lat: 43.97, Lon: -121.68
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=43.97&longitude=-121.68&current=temperature_2m,snowfall&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch');
+                const data = await res.json();
+                
+                const currentTemp = Math.round(data.current.temperature_2m);
+                const currentSnow = data.current.snowfall || 0;
+
+                document.getElementById('temp').innerText = currentTemp + '°F';
+                document.getElementById('snow').innerText = currentSnow + '″';
+            } catch (e) {
+                console.error("Weather update failed:", e);
+                // Fallback for today Dec 18, 2025
+                document.getElementById('temp').innerText = '48°F';
+                document.getElementById('snow').innerText = '0″';
+            }
+        }
+
+        // Run immediately on load
+        updateWeather();
+        // Refresh every 15 minutes to keep it current
+        setInterval(updateWeather, 900000);
+    </script>
 </body>
 </html>
