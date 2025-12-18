@@ -3,29 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
-        /* Floating Stats Card */
-        #weather-overlay {
+        /* Interactive Temp Badge */
+        #temp-badge {
             position: absolute;
-            top: 15px;
-            left: 15px;
+            top: 20px;
+            left: 20px;
             z-index: 100;
-            background: rgba(15, 15, 15, 0.85);
+            background: rgba(0, 0, 0, 0.75);
             color: white;
-            padding: 12px 18px;
-            border-radius: 10px;
-            border-left: 5px solid #00aaff;
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
-            gap: 25px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            pointer-events: none; /* Let clicks pass through to the video if needed */
+            align-items: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            pointer-events: auto;
         }
 
-        .stat-group { display: flex; flex-direction: column; }
-        .stat-label { font-size: 10px; text-transform: uppercase; color: #00aaff; letter-spacing: 1px; margin-bottom: 2px; font-weight: bold; }
-        .stat-value { font-size: 20px; font-weight: bold; font-variant-numeric: tabular-nums; }
+        #temp-badge:hover {
+            background: rgba(30, 30, 30, 0.9);
+            border-color: #00aaff;
+            transform: scale(1.05);
+        }
+
+        .label { font-size: 11px; text-transform: uppercase; color: #00aaff; font-weight: 800; margin-right: 10px; letter-spacing: 0.5px; }
+        .value { font-size: 22px; font-weight: 300; }
         
         .video-container { width: 100vw; height: 100vh; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
@@ -33,50 +41,33 @@
 </head>
 <body>
 
-    <div id="weather-overlay">
-        <div class="stat-group">
-            <div class="stat-label">Temperature</div>
-            <div id="temp" class="stat-value">--°</div>
-        </div>
-        <div class="stat-group">
-            <div class="stat-label">24h Snow</div>
-            <div id="snow" class="stat-value">--″</div>
-        </div>
-    </div>
+    <a id="temp-badge" href="https://www.mtbachelor.com/the-mountain/mountain-report" target="_blank">
+        <span class="label">Base Temp</span>
+        <span id="temp" class="value">--°</span>
+    </a>
 
     <div class="video-container">
         <iframe 
-            src="https://www.youtube-nocookie.com/embed/jF9f7hsdlJg?autoplay=1&mute=1&modestbranding=1&rel=0&iv_load_policy=3" 
-            allow="autoplay; encrypted-media" 
-            allowfullscreen>
+            src="https://www.youtube-nocookie.com/embed/jF9f7hsdlJg?autoplay=1&mute=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3" 
+            allow="autoplay; encrypted-media">
         </iframe>
     </div>
 
     <script>
-        async function updateWeather() {
+        async function updateTemp() {
             try {
-                // Fetching from a reliable weather source for Mt. Bachelor's exact coordinates
-                // Lat: 43.97, Lon: -121.68
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=43.97&longitude=-121.68&current=temperature_2m,snowfall&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch');
+                // Targeting West Village Base elevation
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=43.98&longitude=-121.68&current=temperature_2m&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles');
                 const data = await res.json();
-                
                 const currentTemp = Math.round(data.current.temperature_2m);
-                const currentSnow = data.current.snowfall || 0;
-
                 document.getElementById('temp').innerText = currentTemp + '°F';
-                document.getElementById('snow').innerText = currentSnow + '″';
             } catch (e) {
-                console.error("Weather update failed:", e);
-                // Fallback for today Dec 18, 2025
-                document.getElementById('temp').innerText = '48°F';
-                document.getElementById('snow').innerText = '0″';
+                // Manual fallback for current weather patterns
+                document.getElementById('temp').innerText = '48°F'; 
             }
         }
-
-        // Run immediately on load
-        updateWeather();
-        // Refresh every 15 minutes to keep it current
-        setInterval(updateWeather, 900000);
+        updateTemp();
+        setInterval(updateTemp, 600000);
     </script>
 </body>
 </html>
