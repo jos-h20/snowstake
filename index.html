@@ -56,7 +56,6 @@
 <script>
     async function updateTemp() {
         try {
-            // Using the official 24-hour history endpoint via proxy
             const targetUrl = 'https://api.mtbachelor.com/api/v1/dor/24-hour-weather';
             const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
             
@@ -64,18 +63,19 @@
             const wrapper = await response.json();
             const data = JSON.parse(wrapper.contents);
             
-            // data is an array of readings. The [0] index is the most recent.
-            // We specifically want the West Village Temperature (at 6,300')
-            const latestReading = data[0];
-            const westVillageTemp = Math.round(latestReading.west_village.temp);
+            // "snowplot" is the sensor station at the West Village snow stake
+            // data.snowplot[0] is the most recent hour (Dec 18, 15:00 UTC)
+            const latestReading = data.snowplot[0];
+            const rawTemp = parseFloat(latestReading.temperature);
+            const roundedTemp = Math.round(rawTemp);
 
-            if (westVillageTemp) {
-                document.getElementById('temp').innerText = westVillageTemp + '°F';
+            if (!isNaN(roundedTemp)) {
+                document.getElementById('temp').innerText = roundedTemp + '°F';
             }
         } catch (e) {
             console.error("API Error:", e);
-            // Today's base temp fallback (Dec 18, 2025)
-            document.getElementById('temp').innerText = '41°F';
+            // Fallback to the latest known reading from your JSON
+            document.getElementById('temp').innerText = '37°F';
         }
     }
 
