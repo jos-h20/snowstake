@@ -56,29 +56,21 @@
 <script>
     async function updateTemp() {
         try {
-            const targetUrl = 'https://api.mtbachelor.com/api/v1/dor/24-hour-weather';
-            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+            // Fetch from your own "local" API path
+            const response = await fetch('/api/weather');
+            const data = await response.json();
             
-            const response = await fetch(proxyUrl);
-            const wrapper = await response.json();
-            const data = JSON.parse(wrapper.contents);
-            
-            // "snowplot" is the sensor station at the West Village snow stake
-            // data.snowplot[0] is the most recent hour (Dec 18, 15:00 UTC)
             const latestReading = data.snowplot[0];
-            const rawTemp = parseFloat(latestReading.temperature);
-            const roundedTemp = Math.round(rawTemp);
-
-            if (!isNaN(roundedTemp)) {
-                document.getElementById('temp').innerText = roundedTemp + '°F';
+            const rawTemp = Math.round(parseFloat(latestReading.temperature));
+    
+            if (!isNaN(rawTemp)) {
+                document.getElementById('temp').innerText = rawTemp + '°F';
             }
         } catch (e) {
             console.error("API Error:", e);
-            // Fallback to the latest known reading from your JSON
             document.getElementById('temp').innerText = '--°F';
         }
     }
-
     updateTemp();
     setInterval(updateTemp, 600000); // Refresh every 10 mins
 </script>
